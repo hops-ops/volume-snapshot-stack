@@ -1,0 +1,15 @@
+# HA: 2 replicas (active + standby) with zone-spread, team labels.
+#
+apiVersion: hops.ops.com.ai/v1alpha1
+kind: VolumeSnapshotStack
+metadata:
+  name: snapshot
+  namespace: default
+spec:
+  clusterName: production-cluster
+  labels:
+    team: platform
+  ha:
+    enabled: true
+    replicas: 2                  # leader-elected; 2 = upstream default for HA
+    topologySpreadByZone: true

@@ -1,0 +1,28 @@
+# code: language=yaml
+#
+# Extract observed state from composed resources
+#
+
+{{- $observed := $.observed.resources | default dict }}
+
+{{- $checkReady := dict }}
+{{- range $key := list "snapshot-controller" }}
+  {{- $entry := get $observed $key | default dict }}
+  {{- $resource := $entry.resource | default dict }}
+  {{- $status := $resource.status | default dict }}
+  {{- $ready := false }}
+  {{- range ($status.conditions | default list) }}
+    {{- if and (eq .type "Ready") (eq .status "True") }}
+      {{- $ready = true }}
+    {{- end }}
+  {{- end }}
+  {{- $checkReady = set $checkReady $key $ready }}
+{{- end }}
+
+{{- $state = set $state "observed" (dict
+  "controller" (dict "ready" (get $checkReady "snapshot-controller"))
+) }}
+
+{{- $state = set $state "status" (dict
+  "ready" false
+) }}

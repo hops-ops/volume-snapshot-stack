@@ -1,0 +1,13 @@
+# Minimal: install snapshot-controller in kube-system with default replicas (1).
+#
+# Composes:
+#   - 1 Helm Release: snapshot-controller (piraeus-charts/snapshot-controller)
+#     bundles the snapshot.storage.k8s.io CRDs and the controller Deployment.
+#
+apiVersion: hops.ops.com.ai/v1alpha1
+kind: VolumeSnapshotStack
+metadata:
+  name: snapshot
+  namespace: default
+spec:
+  clusterName: my-cluster

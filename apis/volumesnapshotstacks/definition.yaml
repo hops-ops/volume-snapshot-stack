@@ -1,0 +1,115 @@
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: volumesnapshotstacks.hops.ops.com.ai
+spec:
+  group: hops.ops.com.ai
+  names:
+    kind: VolumeSnapshotStack
+    plural: volumesnapshotstacks
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    served: true
+    schema:
+      openAPIV3Schema:
+        description: |
+          VolumeSnapshotStack installs the Kubernetes CSI `snapshot-controller`
+          — the cluster-wide orchestrator that turns user-facing
+          `VolumeSnapshot` requests into driver-facing `VolumeSnapshotContent`
+          records. Without this controller, VolumeSnapshot resources are
+          accepted but never get their `.status` populated and never reach
+          `readyToUse: true`.
+
+          EKS Auto Mode ships the snapshot.storage.k8s.io CRDs and includes
+          per-CSI-driver snapshotter sidecars (inside AWS-managed control plane
+          components) but does NOT install the cluster-wide controller. This
+          stack closes that gap.
+
+          Composes the upstream `snapshot-controller` Deployment + RBAC + the
+          snapshot CRDs via the piraeus-charts Helm chart (which tracks
+          `kubernetes-csi/external-snapshotter` releases within days).
+        type: object
+        properties:
+          spec:
+            description: VolumeSnapshotStackSpec defines the desired state.
+            type: object
+            properties:
+              clusterName:
+                description: Name of the target cluster. Used as the default for helmProviderConfigRef.name and label values.
+                type: string
+              namespace:
+                description: Namespace to install the snapshot-controller into. Defaults to kube-system (convention for cluster-wide infra controllers).
+                type: string
+              labels:
+                description: Custom labels merged with the stack's default labels.
+                type: object
+                additionalProperties:
+                  type: string
+                x-kubernetes-preserve-unknown-fields: true
+              managementPolicies:
+                description: Crossplane managementPolicies applied to every composed resource. Defaults to ["*"].
+                type: array
+                items:
+                  type: string
+                default:
+                - "*"
+              helmProviderConfigRef:
+                description: Reference to the Helm ProviderConfig. Defaults to clusterName.
+                type: object
+                properties:
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - ProviderConfig
+                    - ClusterProviderConfig
+              ha:
+                description: |
+                  Stack-wide HA mode. snapshot-controller is leader-elected — when
+                  enabled, sets replicaCount + topology spread across zones.
+                  Default replicas: 2 (active + warm standby), bumpable for prod.
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
+                  replicas:
+                    description: Replica count when ha.enabled. Defaults to 2 (matches upstream snapshot-controller default).
+                    type: integer
+                    default: 2
+                  topologySpreadByZone:
+                    description: Add topologySpreadConstraint with topologyKey topology.kubernetes.io/zone, maxSkew 1, whenUnsatisfiable ScheduleAnyway. Defaults to true.
+                    type: boolean
+                    default: true
+              controller:
+                description: snapshot-controller Helm release configuration.
+                type: object
+                properties:
+                  name:
+                    description: Helm release name. Defaults to snapshot-controller.
+                    type: string
+                  chartVersion:
+                    description: piraeus-charts/snapshot-controller chart version. Defaults to 5.0.3 (tracks upstream v8.5.0).
+                    type: string
+                  values:
+                    description: Helm values merged with the stack's chart defaults.
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                  overrideAllValues:
+                    description: Helm values that replace all defaults (escape hatch — full chart values control).
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+            required:
+            - clusterName
+          status:
+            description: VolumeSnapshotStackStatus defines the observed state.
+            type: object
+            properties:
+              ready:
+                description: Overall readiness — true once snapshot-controller is Ready.
+                type: boolean
+        required:
+        - spec

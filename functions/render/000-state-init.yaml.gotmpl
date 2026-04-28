@@ -1,0 +1,77 @@
+# code: language=yaml
+#
+# Initialize $state with spec defaults
+#
+
+{{- $xr := getCompositeResource . }}
+{{- $spec := $xr.spec | default dict }}
+{{- $metadata := $xr.metadata | default dict }}
+
+# ==============================================================================
+# Core defaults
+# ==============================================================================
+{{- $name := $metadata.name | default "snapshot" }}
+{{- $clusterName := $spec.clusterName | default $name }}
+{{- $namespace := $spec.namespace | default "kube-system" }}
+{{- $managementPolicies := $spec.managementPolicies | default (list "*") }}
+
+# Labels
+{{- $defaultLabels := dict
+  "hops.ops.com.ai/managed" "true"
+  "hops.ops.com.ai/volume-snapshot" $name
+}}
+{{- $labels := merge $defaultLabels ($spec.labels | default dict) }}
+
+# Helm provider config (defaults to clusterName)
+{{- $helmProviderConfigRef := $spec.helmProviderConfigRef | default dict }}
+{{- $helmProviderConfigRef = dict
+  "name" ($helmProviderConfigRef.name | default $clusterName)
+  "kind" ($helmProviderConfigRef.kind | default "ProviderConfig")
+}}
+
+# ==============================================================================
+# HA — leader-elected snapshot-controller. When enabled, set replicas + topology
+# spread by zone. Default replicas (2) match upstream's active+standby pattern.
+# ==============================================================================
+{{- $haSpec := $spec.ha | default dict }}
+{{- $haEnabled := false }}
+{{- if hasKey $haSpec "enabled" }}
+  {{- $haEnabled = $haSpec.enabled }}
+{{- end }}
+{{- $haReplicas := $haSpec.replicas | default 2 }}
+{{- $haSpreadByZone := true }}
+{{- if hasKey $haSpec "topologySpreadByZone" }}
+  {{- $haSpreadByZone = $haSpec.topologySpreadByZone }}
+{{- end }}
+{{- $ha := dict
+  "enabled" $haEnabled
+  "replicas" $haReplicas
+  "topologySpreadByZone" $haSpreadByZone
+}}
+
+# ==============================================================================
+# Controller
+# ==============================================================================
+{{- $controller := $spec.controller | default dict }}
+{{- $controllerCfg := dict
+  "name" ($controller.name | default "snapshot-controller")
+  "chartVersion" ($controller.chartVersion | default "5.0.3")
+  "values" ($controller.values | default dict)
+  "overrideAllValues" ($controller.overrideAllValues | default dict)
+}}
+
+# ==============================================================================
+# Initialize $state
+# ==============================================================================
+{{- $state := dict
+  "name" $name
+  "clusterName" $clusterName
+  "namespace" $namespace
+  "managementPolicies" $managementPolicies
+  "labels" $labels
+  "helmProviderConfigRef" $helmProviderConfigRef
+  "ha" $ha
+  "controller" $controllerCfg
+  "observed" (dict)
+  "status" (dict)
+}}

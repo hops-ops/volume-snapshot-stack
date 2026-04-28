@@ -1,0 +1,62 @@
+# code: language=yaml
+#
+# Helm Release: snapshot-controller (piraeus-charts)
+#
+# Cluster-wide orchestrator for CSI VolumeSnapshot resources. Watches
+# `VolumeSnapshot` resources, creates `VolumeSnapshotContent` records, manages
+# binding lifecycle, populates `.status.readyToUse`. Driver-agnostic — works
+# alongside any CSI driver whose controller plugin includes the
+# `csi-snapshotter` sidecar (EKS Auto Mode's managed EBS CSI driver does).
+#
+# The piraeus chart bundles the snapshot.storage.k8s.io CRDs by default. This
+# stack is the canonical CRD installer for the cluster — other charts that
+# also ship these CRDs (Mayastor, Longhorn, etc.) MUST be configured to skip
+# their own CRD shipment to avoid Helm ownership conflicts.
+#
+# Chart: https://piraeus.io/helm-charts (chart name: snapshot-controller)
+# Upstream: https://github.com/kubernetes-csi/external-snapshotter
+#
+
+{{- $controller := $state.controller }}
+
+---
+apiVersion: helm.m.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: {{ $controller.name }}
+  annotations:
+    {{ setResourceNameAnnotation "snapshot-controller" }}
+  labels: {{ $state.labels | toJson }}
+spec:
+  managementPolicies: {{ $state.managementPolicies | toJson }}
+  forProvider:
+    chart:
+      name: snapshot-controller
+      repository: https://piraeus.io/helm-charts
+      version: {{ $controller.chartVersion | quote }}
+    namespace: {{ $state.namespace }}
+    {{- if $controller.overrideAllValues }}
+    values:
+      {{- toYaml $controller.overrideAllValues | nindent 6 }}
+    {{- else }}
+    {{- /* Chart defaults — pure passthrough; HA wiring layered when enabled. */}}
+    {{- $chartDefaults := dict }}
+    {{- if $state.ha.enabled }}
+      {{- $_ := set $chartDefaults "controller" (dict "replicaCount" $state.ha.replicas) }}
+      {{- if $state.ha.topologySpreadByZone }}
+        {{- $_ := set (get $chartDefaults "controller") "topologySpreadConstraints" (list (dict
+          "maxSkew" 1
+          "topologyKey" "topology.kubernetes.io/zone"
+          "whenUnsatisfiable" "ScheduleAnyway"
+          "labelSelector" (dict "matchLabels" (dict "app.kubernetes.io/name" "snapshot-controller"))
+        )) }}
+      {{- end }}
+    {{- end }}
+    {{- $mergedValues := mergeOverwrite $chartDefaults ($controller.values | default dict) }}
+    values:
+      {{- toYaml $mergedValues | nindent 6 }}
+    {{- end }}
+  rollbackLimit: 3
+  providerConfigRef:
+    name: {{ $state.helmProviderConfigRef.name }}
+    kind: {{ $state.helmProviderConfigRef.kind }}

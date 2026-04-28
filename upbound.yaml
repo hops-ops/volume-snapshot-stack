@@ -1,0 +1,33 @@
+apiVersion: meta.dev.upbound.io/v2alpha1
+kind: Project
+metadata:
+  name: volume-snapshot-stack
+spec:
+  dependsOn:
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Function
+    package: xpkg.crossplane.io/crossplane-contrib/function-auto-ready
+    version: '>=v0.6.2'
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.crossplane.io/crossplane-contrib/provider-helm
+    version: '>=v1'
+  description: Installs the Kubernetes CSI snapshot-controller (cluster-wide orchestrator
+    for VolumeSnapshot resources) via the piraeus-charts chart. Required prerequisite
+    for any stack that composes a VolumeSnapshotClass — EKS Auto Mode ships the snapshot
+    CRDs but not the controller.
+  license: Apache-2.0
+  maintainer: Patrick Lee Scott <pat@patscott.io>
+  readme: |
+    # volume-snapshot-stack
+
+    Installs the upstream `kubernetes-csi/external-snapshotter` snapshot-controller
+    Deployment (driver-agnostic, cluster-wide) via the piraeus-charts Helm chart,
+    which bundles the snapshot.storage.k8s.io CRDs.
+
+    Without snapshot-controller, VolumeSnapshot resources are accepted by the
+    kube-apiserver but never processed — the cluster's CSI drivers' snapshotter
+    sidecars have no controller to coordinate with. EKS Auto Mode notably ships
+    the CRDs but no controller; this stack closes that gap.
+  repository: ghcr.io/hops-ops/volume-snapshot-stack
+  source: github.com/hops-ops/volume-snapshot-stack

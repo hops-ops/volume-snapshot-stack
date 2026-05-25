@@ -36,6 +36,10 @@ _items = [
                             version = "5.0.3"
                         }
                         namespace = "kube-system"
+                        values = {
+                            controller.resources.requests = {cpu = "15m", memory = "100Mi"}
+                            webhook.resources.requests = {cpu = "15m", memory = "100Mi"}
+                        }
                     }
                 }
             ]

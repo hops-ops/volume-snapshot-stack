@@ -39,10 +39,23 @@ spec:
     values:
       {{- toYaml $controller.overrideAllValues | nindent 6 }}
     {{- else }}
-    {{- /* Chart defaults — pure passthrough; HA wiring layered when enabled. */}}
-    {{- $chartDefaults := dict }}
+    {{- /* Chart defaults plus live Goldilocks resource floors. */}}
+    {{- $chartDefaults := dict
+      "controller" (dict
+        "resources" (dict
+          "requests" (dict "cpu" "15m" "memory" "100Mi")
+          "limits" (dict "cpu" "100m" "memory" "256Mi")
+        )
+      )
+      "webhook" (dict
+        "resources" (dict
+          "requests" (dict "cpu" "15m" "memory" "100Mi")
+          "limits" (dict "cpu" "100m" "memory" "256Mi")
+        )
+      )
+    }}
     {{- if $state.ha.enabled }}
-      {{- $_ := set $chartDefaults "controller" (dict "replicaCount" $state.ha.replicas) }}
+      {{- $_ := set (get $chartDefaults "controller") "replicaCount" $state.ha.replicas }}
       {{- if $state.ha.topologySpreadByZone }}
         {{- $_ := set (get $chartDefaults "controller") "topologySpreadConstraints" (list (dict
           "maxSkew" 1

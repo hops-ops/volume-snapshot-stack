@@ -1,7 +1,6 @@
-# Changelog
+### What's changed in v0.1.1
 
-All notable changes to this project are tracked in this file.
+* fix: add snapshot controller resource defaults (#5) (by @patrickleet)
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and version tagging is automated via [vnext](https://github.com/unbounded-tech/vnext)
-on merge to `main`.
+
+See full diff: [v0.1.0...v0.1.1](https://github.com/hops-ops/volume-snapshot-stack/compare/v0.1.0...v0.1.1)

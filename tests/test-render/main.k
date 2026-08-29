@@ -33,6 +33,7 @@ _items = [
                         chart = {
                             name = "snapshot-controller"
                             repository = "https://piraeus.io/helm-charts"
+                            # renovate: datasource=helm depName=snapshot-controller registryUrl=https://piraeus.io/helm-charts
                             version = "5.0.3"
                         }
                         namespace = "kube-system"

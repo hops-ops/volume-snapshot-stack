@@ -92,7 +92,7 @@ spec:
                     description: Helm release name. Defaults to snapshot-controller.
                     type: string
                   chartVersion:
-                    description: piraeus-charts/snapshot-controller chart version. Defaults to 5.0.3 (tracks upstream v8.5.0).
+                    description: piraeus-charts/snapshot-controller chart version. When omitted, the stack uses its managed default.
                     type: string
                   values:
                     description: Helm values merged with the stack's chart defaults.

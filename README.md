@@ -127,8 +127,8 @@ That's it. Smallest stack in the repo.
 
 | Kind | Package | Version |
 |---|---|---|
-| Function | `crossplane-contrib/function-auto-ready` | `>=v0 <v1` |
-| Provider | `crossplane-contrib/provider-helm` | `>=v1 <v2` |
+| Function | `crossplane-contrib/function-auto-ready` | `^v0` |
+| Provider | `crossplane-contrib/provider-helm` | `^v1` |
 
 ## Development
 

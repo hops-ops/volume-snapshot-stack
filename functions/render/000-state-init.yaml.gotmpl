@@ -54,7 +54,7 @@
 # ==============================================================================
 {{- $controller := $spec.controller | default dict }}
 # renovate: datasource=helm depName=snapshot-controller registryUrl=https://piraeus.io/helm-charts
-{{- $controllerChartVersion := $controller.chartVersion | default "5.0.3" }}
+{{- $controllerChartVersion := $controller.chartVersion | default "5.2.0" }}
 {{- $controllerCfg := dict
   "name" ($controller.name | default "snapshot-controller")
   "chartVersion" $controllerChartVersion

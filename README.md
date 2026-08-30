@@ -111,7 +111,7 @@ spec:
 | `ha.topologySpreadByZone` | bool | `true` | Add `topologySpreadConstraint` by `topology.kubernetes.io/zone` |
 | **Controller** | | | |
 | `controller.name` | string | `snapshot-controller` | Helm release name |
-| `controller.chartVersion` | string | `5.0.3` | piraeus-charts chart version (tracks upstream `v8.5.0`) |
+| `controller.chartVersion` | string | stack default | piraeus-charts chart version |
 | `controller.values` | object | — | Helm values merged with stack defaults |
 | `controller.overrideAllValues` | object | — | Helm values that replace all defaults |
 
@@ -127,8 +127,8 @@ That's it. Smallest stack in the repo.
 
 | Kind | Package | Version |
 |---|---|---|
-| Function | `crossplane-contrib/function-auto-ready` | `>=v0.6.2` |
-| Provider | `crossplane-contrib/provider-helm` | `>=v1` |
+| Function | `crossplane-contrib/function-auto-ready` | `^v0` |
+| Provider | `crossplane-contrib/provider-helm` | `^v1` |
 
 ## Development
 
